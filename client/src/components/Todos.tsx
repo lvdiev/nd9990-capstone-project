@@ -3,10 +3,11 @@ import { History } from 'history'
 import update from 'immutability-helper'
 import * as React from 'react'
 import { ChangeEvent, useEffect, useState } from 'react'
-import { Button, Checkbox, Divider, Grid, Header, Icon, Input, Image, Loader, Popup } from 'semantic-ui-react'
+import { Button, Checkbox, Divider, Grid, Header, Icon, Input, Image, Loader, Modal } from 'semantic-ui-react'
 import { createTodo, deleteTodo, getTodos, patchTodo } from '../api/todos-api'
 import Auth from '../auth/Auth'
 import { Todo } from '../types/Todo'
+import EditTodo from './EditTodo'
 
 interface TodosProps {
   auth: Auth
@@ -17,20 +18,21 @@ export default function Todos({ auth, history }: TodosProps) {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [newTodoName, setNewTodoName] = useState<string>('');
   const [loadingTodos, setLoadingTodos] = useState<boolean>(true);
+  const [isEditFormOpen, shouldEditFormOpen] = useState<boolean>(false);
 
   useEffect(() => {
-    const fetchTodos = async () => {
-      try {
-        const fetchedTodos = await getTodos(auth.getIdToken())
-        setTodos(fetchedTodos)
-        setLoadingTodos(false)
-      } catch (e) {
-        alert(`Failed to fetch todos: ${(e as Error).message}`)
-      }
-    }
-    fetchTodos()
+    fetchTodos();
   }, [auth])
 
+  const fetchTodos = async () => {
+    try {
+      const fetchedTodos = await getTodos(auth.getIdToken())
+      setTodos(fetchedTodos)
+      setLoadingTodos(false)
+    } catch (e) {
+      alert(`Failed to fetch todos: ${(e as Error).message}`)
+    }
+  }
   const onTodoCreate = async (event: React.ChangeEvent<HTMLButtonElement>) => {
     try {
       const dueDate = calculateDueDate()
@@ -119,7 +121,8 @@ export default function Todos({ auth, history }: TodosProps) {
                   {todo.dueDate}
                 </Grid.Column>
                 <Grid.Column width={1} floated="right">
-                  <Button icon color="blue" onClick={() => history.push(`/todos/${todo.todoId}/edit`)}>
+                  {/* <Button icon color="blue" onClick={() => history.push(`/todos/${todo.todoId}/edit`)}> */}
+                  <Button icon color="blue" onClick={() => shouldEditFormOpen(true)}>
                     <Icon name="pencil" />
                   </Button>
                 </Grid.Column>
@@ -137,6 +140,13 @@ export default function Todos({ auth, history }: TodosProps) {
               </Grid.Row>
             )
           })}
+          <EditTodo auth={auth} isOpen={isEditFormOpen}
+            onClose={() => shouldEditFormOpen(false)}
+            onSubmit={() => {
+              shouldEditFormOpen(false);
+              fetchTodos();
+            }}
+          />
         </Grid>
       }
     </div>

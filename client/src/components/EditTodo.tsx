@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Form, Button } from 'semantic-ui-react';
+import { Form, Button, Modal } from 'semantic-ui-react';
 import Auth from '../auth/Auth';
 import { getUploadUrl, uploadFile } from '../api/todos-api';
 
@@ -10,17 +10,21 @@ enum UploadState {
 }
 
 interface EditTodoProps {
-  match: {
+  match?: {
     params: {
       todoId: string;
     };
   };
   auth: Auth;
+  isOpen?: boolean;
+  onClose?: any;
+  onSubmit?: any;
 }
 
 export default function EditTodo(props: EditTodoProps) {
   const [file, setFile] = useState<any>(undefined);
   const [uploadState, setUploadState] = useState<UploadState>(UploadState.NoUpload);
+  const { isOpen, onClose, onSubmit } = props;
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -53,26 +57,36 @@ export default function EditTodo(props: EditTodoProps) {
   };
 
   return (
-    <div>
-      <h1>Upload new image</h1>
-
-      <Form onSubmit={handleSubmit}>
-        <Form.Field>
-          <label>File</label>
-          <input type="file" accept="image/*" placeholder="Image to upload" onChange={handleFileChange} />
-        </Form.Field>
-        <div>
-          {uploadState === UploadState.FetchingPresignedUrl &&
-            <p>Uploading image metadata</p>
-          }
-          {uploadState === UploadState.UploadingFile &&
-            <p>Uploading file</p>
-          }
-          <Button loading={uploadState !== UploadState.NoUpload} type="submit">
-            Upload
-          </Button>
-        </div>
-      </Form>
-    </div>
+    <Modal
+      onClose={onSubmit}
+      open={isOpen}
+    >
+      <Modal.Header>Upload</Modal.Header>
+      <Modal.Content>
+        <Modal.Description>
+          <Form onSubmit={handleSubmit}>
+            <Form.Field>
+              <input type="file" accept="image/*" placeholder="Image to upload" onChange={handleFileChange} />
+            </Form.Field>
+            <div>
+              {uploadState === UploadState.FetchingPresignedUrl &&
+                <p>Uploading image metadata</p>
+              }
+              {uploadState === UploadState.UploadingFile &&
+                <p>Uploading file</p>
+              }
+              <Button loading={uploadState !== UploadState.NoUpload} type="submit">
+                Upload
+              </Button>
+            </div>
+          </Form>
+        </Modal.Description>
+      </Modal.Content>
+      <Modal.Actions>
+        <Button color='black' onClick={onSubmit}>
+          Close
+        </Button>
+      </Modal.Actions>
+    </Modal>
   );
 };
