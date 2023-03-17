@@ -1,5 +1,5 @@
 import { APIGatewayProxyResult } from 'aws-lambda';
-import { getUserId } from '../auth/utils';
+import { getTenantId } from '../auth/utils';
 import { createLogger } from '../utils/logger';
 import { CustomEvent } from './CustomEvent';
 
@@ -20,7 +20,7 @@ export const credentialsParser = () => ({
 
     try {
 
-      event.userId = getUserId(event);
+      event.tenantId = getTenantId(event);
 
     } catch (error) {
       logger.error(error);

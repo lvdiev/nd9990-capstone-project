@@ -1,6 +1,6 @@
-import 'source-map-support/register'
 import { CustomAuthorizerEvent, CustomAuthorizerResult } from 'aws-lambda'
 import { decode, verify } from 'jsonwebtoken'
+import 'source-map-support/register'
 import { Jwt } from '../../auth/Jwt'
 import { JwtPayload } from '../../auth/JwtPayload'
 import { getSigningKey, getToken } from '../../auth/utils'
@@ -13,10 +13,10 @@ const jwksUrl = 'https://dev-4yc6wwycj1c6fva8.us.auth0.com/.well-known/jwks.json
 export const handler = async (
   event: CustomAuthorizerEvent
 ): Promise<CustomAuthorizerResult> => {
-  logger.info('Authorizing a user', event.authorizationToken)
+  logger.info('Authorizing a Tenant', event.authorizationToken)
   try {
     const jwtToken = await verifyToken(event.authorizationToken)
-    logger.info('User was authorized', jwtToken)
+    logger.info('Tenant was authorized', jwtToken)
 
     return {
       principalId: jwtToken.sub,
@@ -32,10 +32,10 @@ export const handler = async (
       }
     }
   } catch (e) {
-    logger.error('User not authorized', { error: e.message })
+    logger.error('Tenant not authorized', { error: e.message })
 
     return {
-      principalId: 'user',
+      principalId: 'tenant',
       policyDocument: {
         Version: '2012-10-17',
         Statement: [

@@ -8,14 +8,14 @@
       "minLength": 1,
       "maxLength": 50
     },
-    "dueDate": {
+    "joinDate": {
       "type": "string",
       "minLength": 1
     }
   },
   "required": [
     "name",
-    "dueDate"
+    "joinDate"
   ],
   "additionalProperties": false
 }

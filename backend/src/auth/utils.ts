@@ -5,25 +5,25 @@ import { SigningKey } from './SigningKey';
 import { JwtPayload } from './JwtPayload';
 
 /**
- * Parse a JWT token and return a user id
+ * Parse a JWT token and return a Tenant id
  * @param jwtToken JWT token to parse
- * @returns a user id from the JWT token
+ * @returns a Tenant id from the JWT token
  */
-export function parseUserId(jwtToken: string): string {
+export function parseTenantId(jwtToken: string): string {
   const decodedJwt = decode(jwtToken) as JwtPayload
   return decodedJwt.sub
 }
 
 /**
- * Get a user id from an API Gateway event
+ * Get a Tenant id from an API Gateway event
  * @param event an event from API Gateway
  *
- * @returns a user id from a JWT token
+ * @returns a Tenant id from a JWT token
  */
-export function getUserId(event: APIGatewayProxyEvent): string {
+export function getTenantId(event: APIGatewayProxyEvent): string {
   const jwtToken = getToken(event.headers.Authorization);
 
-  return parseUserId(jwtToken)
+  return parseTenantId(jwtToken)
 }
 
 export function getToken(authHeader: string): string {

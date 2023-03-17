@@ -1,36 +1,37 @@
-import 'source-map-support/register'
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import * as middy from 'middy'
 import { cors, httpErrorHandler } from 'middy/middlewares'
-import { getAttachmentUploadUrl } from '../../helpers/todos'
+import 'source-map-support/register'
+import { deleteUser } from '../../db-access/user-access'
 import { createLogger } from '../../utils/logger'
 import { CustomEvent } from '../CustomEvent'
 import { credentialsParser } from '../middlewares'
 
-const logger = createLogger('lambda_gen_upload_url');
+const logger = createLogger('lambda_delete_user');
 
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     try {
-      const { todoId } = event.pathParameters;
-      const { userId } = event as CustomEvent;
-      const url = await getAttachmentUploadUrl(userId, todoId);
+      const { tenantId } = event as CustomEvent;
+      const { userId } = event.pathParameters;
 
-      logger.info("Generated upload URL", { userId, todoId, url });
+      await deleteUser(tenantId, userId);
+
+      logger.info("Deleted user", { userId });
 
       return {
-        statusCode: 201,
+        statusCode: 200,
         body: JSON.stringify({
-          url
+          message: "Item deleted"
         })
-      }
+      };
     } catch (error) {
       logger.error(error);
 
       return {
         statusCode: 500,
         body: JSON.stringify({
-          error: "Unable to generate upload URL"
+          error: "Unable to delete user"
         })
       }
     }

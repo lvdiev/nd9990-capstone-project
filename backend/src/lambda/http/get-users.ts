@@ -1,44 +1,38 @@
-import 'source-map-support/register'
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import * as middy from 'middy'
 import { cors, httpErrorHandler } from 'middy/middlewares'
-import { CreateTodoRequest } from '../../requests/CreateTodoRequest'
-import { createTodo } from '../../helpers/todos'
+import 'source-map-support/register'
+import { getUsers } from '../../services/user-service'
 import { createLogger } from '../../utils/logger'
-import { credentialsParser } from '../middlewares'
 import { CustomEvent } from '../CustomEvent'
+import { credentialsParser } from '../middlewares'
 
-const logger = createLogger('lambda_create_todo');
+const logger = createLogger('lambda_get_users');
 
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     try {
-      const { userId } = event as CustomEvent;
-      const { name, dueDate } = JSON.parse(event.body) as CreateTodoRequest;
-
-      const todo = await createTodo(userId, { name, dueDate });
-
-      logger.info("Created new TODO", { todo });
+      const { tenantId } = event as CustomEvent;
+      const users = await getUsers(tenantId);
 
       return {
-        statusCode: 201,
+        statusCode: 200,
         body: JSON.stringify({
-          item: todo
+          items: users
         })
-      };
-
+      }
     } catch (error) {
       logger.error(error);
 
       return {
         statusCode: 500,
         body: JSON.stringify({
-          error: "Unable to create new TODO"
+          error: "Unable to get users"
         })
       }
     }
   }
-)
+);
 
 handler
   .use(httpErrorHandler())
