@@ -68,7 +68,7 @@ export default function EditTodo(props: EditTodoProps) {
       < Modal.Header > {todo?.name}</Modal.Header >
       <Modal.Content>
         <Modal.Description>
-          {uploadState == UploadState.NoUpload
+          {uploadState === UploadState.NoUpload
             ? <div>
               Image to upload
               <br />

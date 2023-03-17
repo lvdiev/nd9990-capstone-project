@@ -1,17 +1,19 @@
 import dateFormat from 'dateformat'
-import update from 'immutability-helper'
 import * as React from 'react'
 import { useEffect, useState } from 'react'
-import { Button, Checkbox, Divider, Grid, Header, Icon, Image, Input, Loader } from 'semantic-ui-react'
-import { createTodo, deleteTodo, getTodos, patchTodo } from '../api/todos-api'
+import { Button, Divider, Grid, Header, Icon, Image, Input, Loader } from 'semantic-ui-react'
+import { createTodo, deleteTodo, getTodos } from '../api/todos-api'
 import { getIdToken } from '../auth/Auth'
 import { Todo } from '../types/Todo'
 import EditTodo from './EditTodo'
 
-interface TodosProps {
+interface TodoItemProps {
+  todo: Todo,
+  onEdit: any,
+  onDelete: any
 }
 
-export default function Todos(props: TodosProps) {
+export default function Todos(props: any) {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [currentTodo, setCurrentTodo] = useState<Todo>();
   const [newTodoName, setNewTodoName] = useState<string>('');
@@ -49,22 +51,6 @@ export default function Todos(props: TodosProps) {
     try {
       await deleteTodo(getIdToken(), todoId)
       setTodos(todos.filter(todo => todo.todoId !== todoId))
-    } catch {
-      alert('Todo deletion failed')
-    }
-  }
-
-  const onTodoCheck = async (pos: number) => {
-    try {
-      const todo = todos[pos]
-      await patchTodo(getIdToken(), todo.todoId, {
-        name: todo.name,
-        dueDate: todo.dueDate,
-        done: !todo.done
-      })
-      setTodos(update(todos, {
-        [pos]: { done: { $set: !todo.done } }
-      }))
     } catch {
       alert('Todo deletion failed')
     }
@@ -108,40 +94,12 @@ export default function Todos(props: TodosProps) {
           </Loader>
         </Grid.Row>
         : <Grid padded>
-          {todos.map((todo, pos) => {
-            return (
-              <Grid.Row key={todo.todoId}>
-                <Grid.Column width={1} verticalAlign="middle">
-                  <Checkbox
-                    onChange={() => onTodoCheck(pos)}
-                    checked={todo.done}
-                  />
-                </Grid.Column>
-                <Grid.Column width={10} verticalAlign="middle">
-                  {todo.name}
-                </Grid.Column>
-                <Grid.Column width={3} floated="right">
-                  {todo.dueDate}
-                </Grid.Column>
-                <Grid.Column width={1} floated="right">
-                  <Button icon color="blue" onClick={() => setCurrentTodo(todo)}>
-                    <Icon name="pencil" />
-                  </Button>
-                </Grid.Column>
-                <Grid.Column width={1} floated="right">
-                  <Button icon color="red" onClick={() => onTodoDelete(todo.todoId)}>
-                    <Icon name="delete" />
-                  </Button>
-                </Grid.Column>
-                {todo.attachmentUrl && (
-                  <Image src={todo.attachmentUrl} size="small" wrapped />
-                )}
-                <Grid.Column width={16}>
-                  <Divider />
-                </Grid.Column>
-              </Grid.Row>
-            )
-          })}
+          {todos.map(todo =>
+            <TodoItem key={todo.todoId} todo={todo}
+              onEdit={() => setCurrentTodo(todo)}
+              onDelete={() => onTodoDelete(todo.todoId)}
+            />
+          )}
           <EditTodo
             isOpen={!!currentTodo}
             onClose={(refresh: boolean) => onEditFinished(refresh)}
@@ -153,3 +111,32 @@ export default function Todos(props: TodosProps) {
     </div>
   )
 }
+
+const TodoItem = ({ todo, onEdit, onDelete }: TodoItemProps) => (
+  <Grid.Row >
+    <Grid.Column width={5} verticalAlign="middle" floated="left">
+      <div>
+        <strong>Name:</strong> {todo.name}
+      </div>
+      <div>
+        <strong>Birthday:</strong> {todo.dueDate}
+      </div>
+    </Grid.Column>
+    <Grid.Column width={3} floated="left">
+      {todo.attachmentUrl && (
+        <Image src={todo.attachmentUrl} size="small" wrapped />
+      )}
+    </Grid.Column>
+    <Grid.Column floated="right">
+      <Button icon color="blue" onClick={onEdit} title="Edit">
+        <Icon name="pencil" />
+      </Button>
+      <Button icon color="red" onClick={onDelete} title="Delete">
+        <Icon name="delete" />
+      </Button>
+    </Grid.Column>
+    <Grid.Column width={16}>
+      <Divider />
+    </Grid.Column>
+  </Grid.Row>
+)
