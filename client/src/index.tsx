@@ -1,9 +1,8 @@
-import React from 'react'
 import ReactDOM from 'react-dom'
-import './index.css'
-import * as serviceWorker from './serviceWorker'
 import 'semantic-ui-css/semantic.min.css'
-import { makeAuthRouting } from './routing';
+import './css/index.css'
+import { makeAuthRouting } from './routing'
+import * as serviceWorker from './serviceWorker'
 
 ReactDOM.render(makeAuthRouting(), document.getElementById('root'))
 

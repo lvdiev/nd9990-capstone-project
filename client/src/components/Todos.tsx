@@ -1,32 +1,29 @@
 import dateFormat from 'dateformat'
-import { History } from 'history'
 import update from 'immutability-helper'
 import * as React from 'react'
-import { ChangeEvent, useEffect, useState } from 'react'
-import { Button, Checkbox, Divider, Grid, Header, Icon, Input, Image, Loader, Modal } from 'semantic-ui-react'
+import { useEffect, useState } from 'react'
+import { Button, Checkbox, Divider, Grid, Header, Icon, Image, Input, Loader } from 'semantic-ui-react'
 import { createTodo, deleteTodo, getTodos, patchTodo } from '../api/todos-api'
-import Auth from '../auth/Auth'
+import { getIdToken } from '../auth/Auth'
 import { Todo } from '../types/Todo'
 import EditTodo from './EditTodo'
 
 interface TodosProps {
-  auth: Auth
-  history: History
 }
 
-export default function Todos({ auth, history }: TodosProps) {
+export default function Todos(props: TodosProps) {
   const [todos, setTodos] = useState<Todo[]>([]);
+  const [currentTodo, setCurrentTodo] = useState<Todo>();
   const [newTodoName, setNewTodoName] = useState<string>('');
   const [loadingTodos, setLoadingTodos] = useState<boolean>(true);
-  const [isEditFormOpen, shouldEditFormOpen] = useState<boolean>(false);
 
   useEffect(() => {
     fetchTodos();
-  }, [auth])
+  }, [props])
 
   const fetchTodos = async () => {
     try {
-      const fetchedTodos = await getTodos(auth.getIdToken())
+      const fetchedTodos = await getTodos(getIdToken())
       setTodos(fetchedTodos)
       setLoadingTodos(false)
     } catch (e) {
@@ -36,7 +33,7 @@ export default function Todos({ auth, history }: TodosProps) {
   const onTodoCreate = async (event: React.ChangeEvent<HTMLButtonElement>) => {
     try {
       const dueDate = calculateDueDate()
-      const newTodo = await createTodo(auth.getIdToken(), {
+      const newTodo = await createTodo(getIdToken(), {
         name: newTodoName,
         dueDate
       })
@@ -50,7 +47,7 @@ export default function Todos({ auth, history }: TodosProps) {
 
   const onTodoDelete = async (todoId: string) => {
     try {
-      await deleteTodo(auth.getIdToken(), todoId)
+      await deleteTodo(getIdToken(), todoId)
       setTodos(todos.filter(todo => todo.todoId !== todoId))
     } catch {
       alert('Todo deletion failed')
@@ -60,7 +57,7 @@ export default function Todos({ auth, history }: TodosProps) {
   const onTodoCheck = async (pos: number) => {
     try {
       const todo = todos[pos]
-      await patchTodo(auth.getIdToken(), todo.todoId, {
+      await patchTodo(getIdToken(), todo.todoId, {
         name: todo.name,
         dueDate: todo.dueDate,
         done: !todo.done
@@ -78,6 +75,12 @@ export default function Todos({ auth, history }: TodosProps) {
     date.setDate(date.getDate() + 7)
 
     return dateFormat(date, 'yyyy-mm-dd') as string
+  }
+
+  const onEditFinished = (refresh = false) => {
+    setCurrentTodo(undefined);
+    if (refresh)
+      fetchTodos();
   }
 
   return (
@@ -121,8 +124,7 @@ export default function Todos({ auth, history }: TodosProps) {
                   {todo.dueDate}
                 </Grid.Column>
                 <Grid.Column width={1} floated="right">
-                  {/* <Button icon color="blue" onClick={() => history.push(`/todos/${todo.todoId}/edit`)}> */}
-                  <Button icon color="blue" onClick={() => shouldEditFormOpen(true)}>
+                  <Button icon color="blue" onClick={() => setCurrentTodo(todo)}>
                     <Icon name="pencil" />
                   </Button>
                 </Grid.Column>
@@ -140,12 +142,11 @@ export default function Todos({ auth, history }: TodosProps) {
               </Grid.Row>
             )
           })}
-          <EditTodo auth={auth} isOpen={isEditFormOpen}
-            onClose={() => shouldEditFormOpen(false)}
-            onSubmit={() => {
-              shouldEditFormOpen(false);
-              fetchTodos();
-            }}
+          <EditTodo
+            isOpen={!!currentTodo}
+            onClose={(refresh: boolean) => onEditFinished(refresh)}
+            onSubmit={(refresh: boolean) => onEditFinished(refresh)}
+            todo={currentTodo}
           />
         </Grid>
       }

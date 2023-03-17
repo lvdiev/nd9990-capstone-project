@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Form, Button, Modal } from 'semantic-ui-react';
-import Auth from '../auth/Auth';
+import { Button, Input, Loader, Message, Modal } from 'semantic-ui-react';
 import { getUploadUrl, uploadFile } from '../api/todos-api';
+import { getIdToken } from '../auth/Auth';
+import { Todo } from '../types/Todo';
 
 enum UploadState {
   NoUpload,
@@ -9,13 +10,14 @@ enum UploadState {
   UploadingFile,
 }
 
+const messages = {
+  [UploadState.NoUpload]: "",
+  [UploadState.FetchingPresignedUrl]: "Uploading image metadata",
+  [UploadState.UploadingFile]: "Uploading file",
+}
+
 interface EditTodoProps {
-  match?: {
-    params: {
-      todoId: string;
-    };
-  };
-  auth: Auth;
+  todo?: Todo;
   isOpen?: boolean;
   onClose?: any;
   onSubmit?: any;
@@ -24,7 +26,7 @@ interface EditTodoProps {
 export default function EditTodo(props: EditTodoProps) {
   const [file, setFile] = useState<any>(undefined);
   const [uploadState, setUploadState] = useState<UploadState>(UploadState.NoUpload);
-  const { isOpen, onClose, onSubmit } = props;
+  const { isOpen, todo, onClose } = props;
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -42,13 +44,18 @@ export default function EditTodo(props: EditTodoProps) {
         return;
       }
 
+      if (!todo?.todoId) {
+        alert('Todo should be selected');
+        return;
+      }
+
       setUploadState(UploadState.FetchingPresignedUrl);
-      const uploadUrl = await getUploadUrl(props.auth.getIdToken(), props.match.params.todoId);
+      const uploadUrl = await getUploadUrl(getIdToken(), todo.todoId);
 
       setUploadState(UploadState.UploadingFile);
       await uploadFile(uploadUrl, file);
 
-      alert('File was uploaded!');
+      onClose && onClose(true);
     } catch (e) {
       alert('Could not upload a file: ' + (e as Error).message);
     } finally {
@@ -57,36 +64,41 @@ export default function EditTodo(props: EditTodoProps) {
   };
 
   return (
-    <Modal
-      onClose={onSubmit}
-      open={isOpen}
-    >
-      <Modal.Header>Upload</Modal.Header>
+    <Modal open={isOpen}>
+      < Modal.Header > {todo?.name}</Modal.Header >
       <Modal.Content>
         <Modal.Description>
-          <Form onSubmit={handleSubmit}>
-            <Form.Field>
-              <input type="file" accept="image/*" placeholder="Image to upload" onChange={handleFileChange} />
-            </Form.Field>
-            <div>
-              {uploadState === UploadState.FetchingPresignedUrl &&
-                <p>Uploading image metadata</p>
-              }
-              {uploadState === UploadState.UploadingFile &&
-                <p>Uploading file</p>
-              }
-              <Button loading={uploadState !== UploadState.NoUpload} type="submit">
-                Upload
-              </Button>
+          {uploadState == UploadState.NoUpload
+            ? <div>
+              Image to upload
+              <br />
+              <br />
             </div>
-          </Form>
+            : <Message>
+              {messages[uploadState] || ""}
+            </Message>
+          }
+          <Input type="file" accept="image/*" placeholder="Image to upload" onChange={handleFileChange} />
         </Modal.Description>
       </Modal.Content>
       <Modal.Actions>
-        <Button color='black' onClick={onSubmit}>
+        <Button color='black' onClick={() => onClose(false)}>
           Close
         </Button>
+        <Button positive disabled={!file || uploadState !== UploadState.NoUpload}
+          icon={uploadState === UploadState.NoUpload
+            ? 'cloud upload'
+            : {
+              children: (Component, componentProps) =>
+                <Component {...componentProps} color='red' style={{ padding: '3px' }}>
+                  <Loader indeterminate active inline="centered" style={{ padding: '3px' }} />
+                </Component>
+            }}
+          labelPosition='right'
+          content='Upload'
+          onClick={handleSubmit}
+        />
       </Modal.Actions>
-    </Modal>
+    </Modal >
   );
 };
