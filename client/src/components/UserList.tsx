@@ -106,6 +106,11 @@ export default function Users(props: any) {
 
 const UserItem = ({ user, onEdit, onDelete }: UserItemProps) => (
   <Grid.Row >
+    <Grid.Column width={3} floated="left">
+      {user.avatarUrl && (
+        <Image src={user.avatarUrl} size="small" wrapped circular />
+      )}
+    </Grid.Column>
     <Grid.Column width={5} verticalAlign="middle" floated="left">
       <div>
         <strong>Name:</strong> {user.name}
@@ -113,11 +118,6 @@ const UserItem = ({ user, onEdit, onDelete }: UserItemProps) => (
       <div>
         <strong>Joined Date:</strong> {user.joinDate}
       </div>
-    </Grid.Column>
-    <Grid.Column width={3} floated="left">
-      {user.avatarUrl && (
-        <Image src={user.avatarUrl} size="small" wrapped />
-      )}
     </Grid.Column>
     <Grid.Column floated="right">
       <Button icon color="blue" onClick={onEdit} title="Edit">

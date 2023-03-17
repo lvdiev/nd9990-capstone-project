@@ -1,6 +1,6 @@
 org: lvdiev
-app: serverless-user-app
-service: serverless-user-app
+app: serverless-user-management
+service: serverless-user-management
 
 plugins:
   - serverless-webpack
@@ -23,7 +23,7 @@ provider:
   environment:
     USER_TABLE: Users-${self:provider.stage}
     USER_CREATED_AT_INDEX: JoinDateIndex
-    AVATAR_S3_BUCKET: lvdiev-nd9990-project04-${self:provider.stage}
+    AVATAR_S3_BUCKET: lvdiev-nd9990-project05-${self:provider.stage}
     SIGNED_URL_EXPIRATION: 300
 
   logs:
@@ -52,7 +52,7 @@ functions:
     handler: src/lambda/auth/auth0Authorizer.handler
 
   GetUsers:
-    handler: src/lambda/http/getUsers.handler
+    handler: src/lambda/http/get-users.handler
     events:
       - http:
           method: get
@@ -63,7 +63,7 @@ functions:
       - Effect: Allow
         Action:
           - dynamodb:Query
-        Resource: !GetAtt UsersTable.Arn
+        Resource: !GetAtt UserTable.Arn
       - Effect: Allow
         Action:
           - dynamodb:Query
@@ -71,16 +71,16 @@ functions:
           !Join 
             - ''
             - 
-              - !GetAtt UsersTable.Arn
+              - !GetAtt UserTable.Arn
               - '/index/'
-              - ${self:resources.Resources.UsersTable.Properties.LocalSecondaryIndexes.0.IndexName}
+              - ${self:resources.Resources.UserTable.Properties.LocalSecondaryIndexes.0.IndexName}
       - Effect: Allow
         Action:
           - xray:PutTraceSegments
         Resource: "*"
 
   CreateUser:
-    handler: src/lambda/http/createUser.handler
+    handler: src/lambda/http/create-user.handler
     events:
       - http:
           method: post
@@ -100,14 +100,14 @@ functions:
       - Effect: Allow
         Action:
           - dynamodb:PutItem
-        Resource: !GetAtt UsersTable.Arn
+        Resource: !GetAtt UserTable.Arn
       - Effect: Allow
         Action:
           - xray:PutTraceSegments
         Resource: '*'
 
   UpdateUser:
-    handler: src/lambda/http/updateUser.handler
+    handler: src/lambda/http/update-user.handler
     events:
       - http:
           method: patch
@@ -127,14 +127,14 @@ functions:
       - Effect: Allow
         Action:
           - dynamodb:UpdateItem
-        Resource: !GetAtt UsersTable.Arn
+        Resource: !GetAtt UserTable.Arn
       - Effect: Allow
         Action:
           - xray:PutTraceSegments
         Resource: "*"
 
   DeleteUser:
-    handler: src/lambda/http/deleteUser.handler
+    handler: src/lambda/http/delete-user.handler
     events:
       - http:
           method: delete
@@ -145,14 +145,14 @@ functions:
       - Effect: Allow
         Action:
           - dynamodb:DeleteItem
-        Resource: !GetAtt UsersTable.Arn
+        Resource: !GetAtt UserTable.Arn
       - Effect: Allow
         Action:
           - xray:PutTraceSegments
         Resource: "*"
 
   GenerateUploadUrl:
-    handler: src/lambda/http/generateUploadUrl.handler
+    handler: src/lambda/http/get-upload-url.handler
     events:
       - http:
           method: post
@@ -163,7 +163,7 @@ functions:
       - Effect: Allow
         Action:
           - dynamodb:UpdateItem
-        Resource: !GetAtt UsersTable.Arn
+        Resource: !GetAtt UserTable.Arn
       - Effect: Allow
         Action:
           - s3:PutObject
@@ -195,7 +195,7 @@ resources:
           Ref: ApiGatewayRestApi
         ValidateRequestBody: true
         ValidateRequestParameters: false
-    UsersTable:
+    UserTable:
       Type: AWS::DynamoDB::Table
       Properties:
         TableName: ${self:provider.environment.USER_TABLE}
