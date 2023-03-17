@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Grid, Icon, Menu, Segment } from 'semantic-ui-react'
 import { isAuthenticated, login, logout } from './auth/Auth'
-import Todos from './components/Todos'
+import UserList from './components/UserList'
 
 interface AppProps {
   history: any
@@ -35,7 +35,7 @@ export default function App(props: AppProps) {
               </Menu>
               {!iAuth
                 ? <h2>Please login first!</h2>
-                : <Todos {...props} />
+                : <UserList {...props} />
               }
             </Grid.Column>
           </Grid.Row>

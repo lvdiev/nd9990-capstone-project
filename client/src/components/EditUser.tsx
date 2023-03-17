@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Button, Input, Loader, Message, Modal } from 'semantic-ui-react';
-import { getUploadUrl, uploadFile } from '../api/todos-api';
+import { getUploadUrl, uploadFile } from '../api/user-api';
 import { getIdToken } from '../auth/Auth';
-import { Todo } from '../types/Todo';
+import { User } from '../types/User';
 
 enum UploadState {
   NoUpload,
@@ -16,17 +16,17 @@ const messages = {
   [UploadState.UploadingFile]: "Uploading file",
 }
 
-interface EditTodoProps {
-  todo?: Todo;
+interface EditUserProps {
+  user?: User;
   isOpen?: boolean;
   onClose?: any;
   onSubmit?: any;
 }
 
-export default function EditTodo(props: EditTodoProps) {
+export default function EditUser(props: EditUserProps) {
   const [file, setFile] = useState<any>(undefined);
   const [uploadState, setUploadState] = useState<UploadState>(UploadState.NoUpload);
-  const { isOpen, todo, onClose } = props;
+  const { isOpen, user, onClose } = props;
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -44,13 +44,13 @@ export default function EditTodo(props: EditTodoProps) {
         return;
       }
 
-      if (!todo?.todoId) {
-        alert('Todo should be selected');
+      if (!user?.userId) {
+        alert('User should be selected');
         return;
       }
 
       setUploadState(UploadState.FetchingPresignedUrl);
-      const uploadUrl = await getUploadUrl(getIdToken(), todo.todoId);
+      const uploadUrl = await getUploadUrl(getIdToken(), user.userId);
 
       setUploadState(UploadState.UploadingFile);
       await uploadFile(uploadUrl, file);
@@ -65,7 +65,7 @@ export default function EditTodo(props: EditTodoProps) {
 
   return (
     <Modal open={isOpen}>
-      < Modal.Header > {todo?.name}</Modal.Header >
+      < Modal.Header > {user?.name}</Modal.Header >
       <Modal.Content>
         <Modal.Description>
           {uploadState === UploadState.NoUpload
